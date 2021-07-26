@@ -1,0 +1,127 @@
+* {
+    position: relative;
+    scroll-behavior: smooth;
+}
+@keyframes wobble {
+
+}
+.chat_container {
+    width: 100%;
+    height: 100vh;
+    background-color: #8a8a8a;
+    background-image: linear-gradient(246deg, #8a8a8a 0%, #e9e9e9 100%);
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+
+    &__inner {
+        width: 100%;
+        max-width: 1200px;
+        margin: auto;
+        border-radius: 5px;
+        background: #f1f1f1;
+        max-height: 660px;
+        animation: wobble 0.5s ease;
+
+        &__top {
+            background: #f1f1f1;
+            padding: 8px 10px;
+            border-radius: 5px 5px 0 0;
+            border-left: 1px solid #aaaaaa;
+            border-top: 1px solid #b6b6b6;
+            border-right: 1px solid #c9c9c9;
+            display: flex;
+            justify-content: space-between;
+
+            h3 {
+                margin: 0;
+            }
+        }
+        &__bottom {
+            display: flex;
+            background: #ffffff;
+            overflow: hidden;
+            position: relative;
+            border-radius: 0 0 5px 5px;
+            border-left: 1px solid #aaaaaa;
+            border-bottom: 1px solid #b6b6b6;
+            border-right: 1px solid #c9c9c9;
+
+            &__left {
+                border: 1px solid #e3e3e3;
+            }
+
+            &__right {
+                width: 100%;
+                padding: 10px;
+                overflow: auto;
+                height: 600px;
+                position: relative;
+
+                &__top {
+                    height: 100%;
+                    overflow: auto;
+
+                    &__wrapper {
+                        height: 100%;
+                        width: 100%;
+                        position: relative;
+                    }
+
+                    &__message-box {
+                        width: 100%;
+                        position: relative;
+                    }
+
+                    &__spinner {
+                        width: 100%;
+                        display: flex;
+                        justify-content: center;
+                        height: 100%;
+                        flex-direction: column;
+
+                        div {
+                            margin: auto;
+                        }
+                    }
+                }
+                img {
+                    max-width: 250px;
+                }
+                &__bottom {
+                    position: absolute;
+                    right: 0;
+                    bottom: 0;
+                    width: 100%;
+                    padding: 2px;
+                    background: #ffffff;
+
+                    input {
+                        background: #ffffff;
+                    }
+
+                    img {
+                        transform: rotate(-210deg);
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+::-webkit-scrollbar {
+    width: 5px;
+}
+
+::-webkit-scrollbar-track {
+    width: 5px;
+    background: #f5f5f5;
+}
+
+::-webkit-scrollbar-thumb {
+    width: 1em;
+    background-color: #ddd;
+    outline: 1px solid slategrey;
+    border-radius: 1rem;
+}
