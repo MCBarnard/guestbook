@@ -17,10 +17,6 @@ Broadcast::channel('App.User.{id}', function ($user, $id) {
     return (int) $user->id === (int) $id;
 });
 
-Broadcast::channel('threadChannel', function () {
-    return true;
-});
-
-Broadcast::channel('adminChannel', function () {
-    return true;
+Broadcast::channel('messages.{id}', function ($user, $id) {
+    return (int) $user->id === (int) $id || $user->is_admin;
 });

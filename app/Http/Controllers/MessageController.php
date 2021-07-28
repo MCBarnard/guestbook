@@ -119,7 +119,7 @@ class MessageController extends Controller
         $packet['email'] = $message->user->email;
         $packet['created_at'] =  date_format($message->created_at,"H:i d M Y ");
 
-        MessagesUpdated::dispatch($packet);
+        MessagesUpdated::dispatch($packet, $message->user);
 
         return new Response("Success!" , Response::HTTP_OK);
     }
@@ -155,7 +155,7 @@ class MessageController extends Controller
         $packet['email'] = $message->user->email;
         $packet['created_at'] =  date_format($message->created_at,"H:i d M Y ");
 
-        MessagesUpdated::dispatch($packet);
+        MessagesUpdated::dispatch($packet, $message->user);
 
         return new Response("Success!" , Response::HTTP_OK);
     }
@@ -186,7 +186,7 @@ class MessageController extends Controller
         $packet['email'] = $message->user->email;
         $packet['created_at'] =  date_format($message->created_at,"H:i d M Y ");
 
-        MessagesUpdated::dispatch($packet);
+        MessagesUpdated::dispatch($packet, $message->user);
 
         return new Response("Success!" , Response::HTTP_OK);
     }

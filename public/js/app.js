@@ -1928,7 +1928,7 @@ __webpack_require__.r(__webpack_exports__);
 //
 /* harmony default export */ __webpack_exports__["default"] = ({
   name: "App",
-  components: {}
+  props: ['csrf', 'oldName']
 });
 
 /***/ }),
@@ -2214,9 +2214,10 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
       broadcaster: 'pusher',
       key: '47b97d41f73ba8738cc5',
       cluster: 'ap2',
-      useTLS: true
+      useTLS: true,
+      csrfToken: window.options.csrfToken
     });
-    window.Echo.channel('messages').listen('MessagesUpdated', function (e) {
+    window.Echo["private"]('messages.admin').listen('MessagesUpdated', function (e) {
       _this.echoReceived(e);
     });
   },
@@ -2532,39 +2533,36 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
       isAdmin: false
     };
   },
-  created: function created() {
-    var _this = this;
-
-    window.Echo = new laravel_echo__WEBPACK_IMPORTED_MODULE_3__["default"]({
-      broadcaster: 'pusher',
-      key: '47b97d41f73ba8738cc5',
-      cluster: 'ap2',
-      useTLS: true
-    });
-    window.Echo.channel('messages').listen('MessagesUpdated', function (e) {
-      _this.echoReceived(e);
-    });
-  },
   mounted: function mounted() {
-    var _this2 = this;
+    var _this = this;
 
     return _asyncToGenerator( /*#__PURE__*/_babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.mark(function _callee() {
       return _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.wrap(function _callee$(_context) {
         while (1) {
           switch (_context.prev = _context.next) {
             case 0:
-              _this2.nothingOn = false;
-              _this2.fetching = true;
+              _this.nothingOn = false;
+              _this.fetching = true;
               _context.next = 4;
               return axios.get("/home/user").then(function (response) {
-                _this2.activeId = response.data.id;
-                _this2.username = response.data.name;
-                _this2.isAdmin = parseInt(response.data.is_admin);
+                _this.activeId = response.data.id;
+                _this.username = response.data.name;
+                _this.isAdmin = parseInt(response.data.is_admin);
+                window.Echo = new laravel_echo__WEBPACK_IMPORTED_MODULE_3__["default"]({
+                  broadcaster: 'pusher',
+                  key: '47b97d41f73ba8738cc5',
+                  cluster: 'ap2',
+                  useTLS: true,
+                  csrfToken: window.options.csrfToken
+                });
+                window.Echo["private"]('messages.' + response.data.id).listen('MessagesUpdated', function (e) {
+                  _this.echoReceived(e);
+                });
               });
 
             case 4:
               _context.next = 6;
-              return _this2.fetchChat();
+              return _this.fetchChat();
 
             case 6:
             case "end":
@@ -2576,23 +2574,23 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
   },
   methods: {
     fetchChat: function fetchChat() {
-      var _this3 = this;
+      var _this2 = this;
 
       return _asyncToGenerator( /*#__PURE__*/_babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.mark(function _callee2() {
         return _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.wrap(function _callee2$(_context2) {
           while (1) {
             switch (_context2.prev = _context2.next) {
               case 0:
-                _this3.nothingOn = false;
-                _this3.fetching = true;
-                _this3.responseMessage = "";
+                _this2.nothingOn = false;
+                _this2.fetching = true;
+                _this2.responseMessage = "";
                 _context2.next = 5;
                 return axios.get("/home").then(function (response) {
-                  _this3.activeData = {
+                  _this2.activeData = {
                     messages: response.data
                   };
-                  _this3.activeData.messages = response.data;
-                  _this3.fetching = false;
+                  _this2.activeData.messages = response.data;
+                  _this2.fetching = false;
                   setTimeout(function () {
                     var wrapper = document.getElementById("message-box-wrapper");
                     var div = document.getElementById("message-box");
@@ -2609,7 +2607,7 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
       }))();
     },
     sendMessage: function sendMessage() {
-      var _this4 = this;
+      var _this3 = this;
 
       return _asyncToGenerator( /*#__PURE__*/_babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.mark(function _callee3() {
         var data;
@@ -2617,15 +2615,15 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
           while (1) {
             switch (_context3.prev = _context3.next) {
               case 0:
-                _this4.fetching = true;
+                _this3.fetching = true;
                 data = {
-                  "message": _this4.responseMessage
+                  "message": _this3.responseMessage
                 };
                 _context3.next = 4;
                 return axios.post("/home/new", data).then(function (response) {
                   if (response.status === 200) {
-                    _this4.fetching = false;
-                    _this4.responseMessage = "";
+                    _this3.fetching = false;
+                    _this3.responseMessage = "";
                   }
                 });
 
@@ -2638,7 +2636,7 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
       }))();
     },
     echoReceived: function echoReceived(echo) {
-      var _this5 = this;
+      var _this4 = this;
 
       return _asyncToGenerator( /*#__PURE__*/_babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.mark(function _callee4() {
         var i, messageIsCorrectMessage_ID, messageIsCorrectID, x;
@@ -2646,10 +2644,10 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
           while (1) {
             switch (_context4.prev = _context4.next) {
               case 0:
-                if (echo.message.user_id === _this5.activeId) {
+                if (echo.message.user_id === _this4.activeId) {
                   // if we have an open chat, and the active chat is the echoed chat and it isnt a delete broadcast push to chat
-                  if (typeof _this5.activeData !== "undefined" && echo.message.action === "new") {
-                    _this5.activeData.messages.push({
+                  if (typeof _this4.activeData !== "undefined" && echo.message.action === "new") {
+                    _this4.activeData.messages.push({
                       id: echo.message.message_id,
                       admin: echo.message.from_admin,
                       message: echo.message.message,
@@ -2658,30 +2656,30 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
                       user_id: echo.message.user_id
                     });
 
-                    _this5.scrollDown();
+                    _this4.scrollDown();
                   } else if (echo.message.action === "delete") {
-                    for (i = 0; i < _this5.activeData.messages.length; i++) {
-                      messageIsCorrectMessage_ID = parseInt(_this5.activeData.messages[i].message_id) === parseInt(echo.message.message_id);
-                      messageIsCorrectID = parseInt(_this5.activeData.messages[i].id) === parseInt(echo.message.message_id);
+                    for (i = 0; i < _this4.activeData.messages.length; i++) {
+                      messageIsCorrectMessage_ID = parseInt(_this4.activeData.messages[i].message_id) === parseInt(echo.message.message_id);
+                      messageIsCorrectID = parseInt(_this4.activeData.messages[i].id) === parseInt(echo.message.message_id);
 
                       if (messageIsCorrectMessage_ID || messageIsCorrectID) {
-                        _this5.activeData.messages.splice(i, 1);
+                        _this4.activeData.messages.splice(i, 1);
 
-                        i = _this5.activeData.messages.length;
+                        i = _this4.activeData.messages.length;
                       }
                     }
 
-                    _this5.scrollDown();
-                  } else if (typeof _this5.activeData !== "undefined" && echo.message.action === "edit") {
-                    if (typeof _this5.activeData !== "undefined" && _this5.activeData.messages.length !== 0) {
-                      for (x = 0; x < _this5.activeData.messages.length; x++) {
-                        if (parseInt(_this5.activeData.messages[x].message_id) === parseInt(echo.message.message_id)) {
-                          _this5.activeData.messages[x].message = echo.message.message;
+                    _this4.scrollDown();
+                  } else if (typeof _this4.activeData !== "undefined" && echo.message.action === "edit") {
+                    if (typeof _this4.activeData !== "undefined" && _this4.activeData.messages.length !== 0) {
+                      for (x = 0; x < _this4.activeData.messages.length; x++) {
+                        if (parseInt(_this4.activeData.messages[x].message_id) === parseInt(echo.message.message_id)) {
+                          _this4.activeData.messages[x].message = echo.message.message;
                         }
                       }
                     }
 
-                    _this5.scrollDown();
+                    _this4.scrollDown();
                   }
                 }
 
@@ -7183,7 +7181,7 @@ exports = module.exports = __webpack_require__(/*! ../../../../node_modules/css-
 
 
 // module
-exports.push([module.i, "*[data-v-3764acd8] {\n  position: relative;\n  scroll-behavior: smooth;\n}\n@-webkit-keyframes wobble-data-v-3764acd8 {}\n@keyframes wobble-data-v-3764acd8 {}\n.chat_container[data-v-3764acd8] {\n  width: 100%;\n  height: 100vh;\n  background-color: #8a8a8a;\n  background-image: linear-gradient(246deg, #8a8a8a 0%, #e9e9e9 100%);\n  display: flex;\n  justify-content: center;\n  flex-direction: column;\n}\n.chat_container__inner[data-v-3764acd8] {\n  width: 100%;\n  max-width: 1200px;\n  margin: auto;\n  border-radius: 5px;\n  background: #f1f1f1;\n  max-height: 660px;\n  -webkit-animation: wobble-data-v-3764acd8 0.5s ease;\n          animation: wobble-data-v-3764acd8 0.5s ease;\n}\n.chat_container__inner__top[data-v-3764acd8] {\n  background: #f1f1f1;\n  padding: 8px 10px;\n  border-radius: 5px 5px 0 0;\n  border-left: 1px solid #aaaaaa;\n  border-top: 1px solid #b6b6b6;\n  border-right: 1px solid #c9c9c9;\n  display: flex;\n  justify-content: space-between;\n}\n.chat_container__inner__top h3[data-v-3764acd8] {\n  margin: 0;\n}\n.chat_container__inner__bottom[data-v-3764acd8] {\n  display: flex;\n  background: #ffffff;\n  overflow: hidden;\n  position: relative;\n  border-radius: 0 0 5px 5px;\n  border-left: 1px solid #aaaaaa;\n  border-bottom: 1px solid #b6b6b6;\n  border-right: 1px solid #c9c9c9;\n}\n.chat_container__inner__bottom__left[data-v-3764acd8] {\n  border: 1px solid #e3e3e3;\n}\n.chat_container__inner__bottom__right[data-v-3764acd8] {\n  width: 100%;\n  padding: 10px;\n  overflow: auto;\n  height: 600px;\n  position: relative;\n}\n.chat_container__inner__bottom__right__top[data-v-3764acd8] {\n  height: 100%;\n  overflow: auto;\n}\n.chat_container__inner__bottom__right__top__wrapper[data-v-3764acd8] {\n  height: 100%;\n  width: 100%;\n  position: relative;\n}\n.chat_container__inner__bottom__right__top__message-box[data-v-3764acd8] {\n  width: 100%;\n  position: relative;\n}\n.chat_container__inner__bottom__right__top__spinner[data-v-3764acd8] {\n  width: 100%;\n  display: flex;\n  justify-content: center;\n  height: 100%;\n  flex-direction: column;\n}\n.chat_container__inner__bottom__right__top__spinner div[data-v-3764acd8] {\n  margin: auto;\n}\n.chat_container__inner__bottom__right img[data-v-3764acd8] {\n  max-width: 250px;\n}\n.chat_container__inner__bottom__right__bottom[data-v-3764acd8] {\n  position: absolute;\n  right: 0;\n  bottom: 0;\n  width: 100%;\n  padding: 2px;\n  background: #ffffff;\n}\n.chat_container__inner__bottom__right__bottom input[data-v-3764acd8] {\n  background: #ffffff;\n}\n.chat_container__inner__bottom__right__bottom img[data-v-3764acd8] {\n  transform: rotate(-210deg);\n}\n[data-v-3764acd8]::-webkit-scrollbar {\n  width: 5px;\n}\n[data-v-3764acd8]::-webkit-scrollbar-track {\n  width: 5px;\n  background: #f5f5f5;\n}\n[data-v-3764acd8]::-webkit-scrollbar-thumb {\n  width: 1em;\n  background-color: #ddd;\n  outline: 1px solid slategrey;\n  border-radius: 1rem;\n}", ""]);
+exports.push([module.i, "*[data-v-3764acd8] {\n  position: relative;\n  scroll-behavior: smooth;\n}\n@-webkit-keyframes wobble-data-v-3764acd8 {}\n@keyframes wobble-data-v-3764acd8 {}\n.chat_container[data-v-3764acd8] {\n  width: 100%;\n  height: 100vh;\n  background-color: #8a8a8a;\n  background-image: linear-gradient(246deg, #8a8a8a 0%, #e9e9e9 100%);\n  display: flex;\n  justify-content: center;\n  flex-direction: column;\n}\n.chat_container__inner[data-v-3764acd8] {\n  width: 100%;\n  max-width: 1200px;\n  margin: auto;\n  border-radius: 5px;\n  background: #f1f1f1;\n  max-height: 660px;\n  -webkit-animation: wobble-data-v-3764acd8 0.5s ease;\n          animation: wobble-data-v-3764acd8 0.5s ease;\n}\n.chat_container__inner__top[data-v-3764acd8] {\n  background: #f1f1f1;\n  padding: 8px 10px;\n  border-radius: 5px 5px 0 0;\n  border-left: 1px solid #aaaaaa;\n  border-top: 1px solid #b6b6b6;\n  border-right: 1px solid #c9c9c9;\n  display: flex;\n  justify-content: space-between;\n}\n.chat_container__inner__top h3[data-v-3764acd8] {\n  margin: 0;\n}\n.chat_container__inner__bottom[data-v-3764acd8] {\n  display: flex;\n  background: #ffffff;\n  overflow: hidden;\n  position: relative;\n  border-radius: 0 0 5px 5px;\n  border-left: 1px solid #aaaaaa;\n  border-bottom: 1px solid #b6b6b6;\n  border-right: 1px solid #c9c9c9;\n}\n.chat_container__inner__bottom__left[data-v-3764acd8] {\n  border: 1px solid #e3e3e3;\n}\n.chat_container__inner__bottom__right[data-v-3764acd8] {\n  width: 100%;\n  padding: 10px;\n  overflow: auto;\n  height: 600px;\n  position: relative;\n}\n.chat_container__inner__bottom__right__top[data-v-3764acd8] {\n  height: 100%;\n  overflow: auto;\n  padding-bottom: 30px;\n}\n.chat_container__inner__bottom__right__top__wrapper[data-v-3764acd8] {\n  height: 100%;\n  width: 100%;\n  position: relative;\n}\n.chat_container__inner__bottom__right__top__message-box[data-v-3764acd8] {\n  width: 100%;\n  position: relative;\n}\n.chat_container__inner__bottom__right__top__spinner[data-v-3764acd8] {\n  width: 100%;\n  display: flex;\n  justify-content: center;\n  height: 100%;\n  flex-direction: column;\n}\n.chat_container__inner__bottom__right__top__spinner div[data-v-3764acd8] {\n  margin: auto;\n}\n.chat_container__inner__bottom__right img[data-v-3764acd8] {\n  max-width: 250px;\n}\n.chat_container__inner__bottom__right__bottom[data-v-3764acd8] {\n  position: absolute;\n  right: 0;\n  bottom: 0;\n  width: 100%;\n  padding: 2px;\n  background: #ffffff;\n}\n.chat_container__inner__bottom__right__bottom input[data-v-3764acd8] {\n  background: #ffffff;\n}\n.chat_container__inner__bottom__right__bottom img[data-v-3764acd8] {\n  transform: rotate(-210deg);\n}\n[data-v-3764acd8]::-webkit-scrollbar {\n  width: 5px;\n}\n[data-v-3764acd8]::-webkit-scrollbar-track {\n  width: 5px;\n  background: #f5f5f5;\n}\n[data-v-3764acd8]::-webkit-scrollbar-thumb {\n  width: 1em;\n  background-color: #ddd;\n  outline: 1px solid slategrey;\n  border-radius: 1rem;\n}", ""]);
 
 // exports
 
@@ -7202,7 +7200,7 @@ exports = module.exports = __webpack_require__(/*! ../../../../node_modules/css-
 
 
 // module
-exports.push([module.i, "*[data-v-317790a4] {\n  position: relative;\n  scroll-behavior: smooth;\n}\n@-webkit-keyframes wobble-data-v-317790a4 {}\n@keyframes wobble-data-v-317790a4 {}\n.chat_container[data-v-317790a4] {\n  width: 100%;\n  height: 100vh;\n  background-color: #8a8a8a;\n  background-image: linear-gradient(246deg, #8a8a8a 0%, #e9e9e9 100%);\n  display: flex;\n  justify-content: center;\n  flex-direction: column;\n}\n.chat_container__inner[data-v-317790a4] {\n  width: 100%;\n  max-width: 1200px;\n  margin: auto;\n  border-radius: 5px;\n  background: #f1f1f1;\n  max-height: 660px;\n  -webkit-animation: wobble-data-v-317790a4 0.5s ease;\n          animation: wobble-data-v-317790a4 0.5s ease;\n}\n.chat_container__inner__top[data-v-317790a4] {\n  background: #f1f1f1;\n  padding: 8px 10px;\n  border-radius: 5px 5px 0 0;\n  border-left: 1px solid #aaaaaa;\n  border-top: 1px solid #b6b6b6;\n  border-right: 1px solid #c9c9c9;\n  display: flex;\n  justify-content: space-between;\n}\n.chat_container__inner__top h3[data-v-317790a4] {\n  margin: 0;\n}\n.chat_container__inner__bottom[data-v-317790a4] {\n  display: flex;\n  background: #ffffff;\n  overflow: hidden;\n  position: relative;\n  border-radius: 0 0 5px 5px;\n  border-left: 1px solid #aaaaaa;\n  border-bottom: 1px solid #b6b6b6;\n  border-right: 1px solid #c9c9c9;\n}\n.chat_container__inner__bottom__left[data-v-317790a4] {\n  border: 1px solid #e3e3e3;\n}\n.chat_container__inner__bottom__right[data-v-317790a4] {\n  width: 100%;\n  padding: 10px;\n  overflow: auto;\n  height: 600px;\n  position: relative;\n}\n.chat_container__inner__bottom__right__top[data-v-317790a4] {\n  height: 100%;\n  overflow: auto;\n}\n.chat_container__inner__bottom__right__top__wrapper[data-v-317790a4] {\n  height: 100%;\n  width: 100%;\n  position: relative;\n}\n.chat_container__inner__bottom__right__top__message-box[data-v-317790a4] {\n  width: 100%;\n  position: relative;\n}\n.chat_container__inner__bottom__right__top__spinner[data-v-317790a4] {\n  width: 100%;\n  display: flex;\n  justify-content: center;\n  height: 100%;\n  flex-direction: column;\n}\n.chat_container__inner__bottom__right__top__spinner div[data-v-317790a4] {\n  margin: auto;\n}\n.chat_container__inner__bottom__right img[data-v-317790a4] {\n  max-width: 250px;\n}\n.chat_container__inner__bottom__right__bottom[data-v-317790a4] {\n  position: absolute;\n  right: 0;\n  bottom: 0;\n  width: 100%;\n  padding: 2px;\n  background: #ffffff;\n}\n.chat_container__inner__bottom__right__bottom input[data-v-317790a4] {\n  background: #ffffff;\n}\n.chat_container__inner__bottom__right__bottom img[data-v-317790a4] {\n  transform: rotate(-210deg);\n}\n[data-v-317790a4]::-webkit-scrollbar {\n  width: 5px;\n}\n[data-v-317790a4]::-webkit-scrollbar-track {\n  width: 5px;\n  background: #f5f5f5;\n}\n[data-v-317790a4]::-webkit-scrollbar-thumb {\n  width: 1em;\n  background-color: #ddd;\n  outline: 1px solid slategrey;\n  border-radius: 1rem;\n}", ""]);
+exports.push([module.i, "*[data-v-317790a4] {\n  position: relative;\n  scroll-behavior: smooth;\n}\n@-webkit-keyframes wobble-data-v-317790a4 {}\n@keyframes wobble-data-v-317790a4 {}\n.chat_container[data-v-317790a4] {\n  width: 100%;\n  height: 100vh;\n  background-color: #8a8a8a;\n  background-image: linear-gradient(246deg, #8a8a8a 0%, #e9e9e9 100%);\n  display: flex;\n  justify-content: center;\n  flex-direction: column;\n}\n.chat_container__inner[data-v-317790a4] {\n  width: 100%;\n  max-width: 1200px;\n  margin: auto;\n  border-radius: 5px;\n  background: #f1f1f1;\n  max-height: 660px;\n  -webkit-animation: wobble-data-v-317790a4 0.5s ease;\n          animation: wobble-data-v-317790a4 0.5s ease;\n}\n.chat_container__inner__top[data-v-317790a4] {\n  background: #f1f1f1;\n  padding: 8px 10px;\n  border-radius: 5px 5px 0 0;\n  border-left: 1px solid #aaaaaa;\n  border-top: 1px solid #b6b6b6;\n  border-right: 1px solid #c9c9c9;\n  display: flex;\n  justify-content: space-between;\n}\n.chat_container__inner__top h3[data-v-317790a4] {\n  margin: 0;\n}\n.chat_container__inner__bottom[data-v-317790a4] {\n  display: flex;\n  background: #ffffff;\n  overflow: hidden;\n  position: relative;\n  border-radius: 0 0 5px 5px;\n  border-left: 1px solid #aaaaaa;\n  border-bottom: 1px solid #b6b6b6;\n  border-right: 1px solid #c9c9c9;\n}\n.chat_container__inner__bottom__left[data-v-317790a4] {\n  border: 1px solid #e3e3e3;\n}\n.chat_container__inner__bottom__right[data-v-317790a4] {\n  width: 100%;\n  padding: 10px;\n  overflow: auto;\n  height: 600px;\n  position: relative;\n}\n.chat_container__inner__bottom__right__top[data-v-317790a4] {\n  height: 100%;\n  overflow: auto;\n  padding-bottom: 30px;\n}\n.chat_container__inner__bottom__right__top__wrapper[data-v-317790a4] {\n  height: 100%;\n  width: 100%;\n  position: relative;\n}\n.chat_container__inner__bottom__right__top__message-box[data-v-317790a4] {\n  width: 100%;\n  position: relative;\n}\n.chat_container__inner__bottom__right__top__spinner[data-v-317790a4] {\n  width: 100%;\n  display: flex;\n  justify-content: center;\n  height: 100%;\n  flex-direction: column;\n}\n.chat_container__inner__bottom__right__top__spinner div[data-v-317790a4] {\n  margin: auto;\n}\n.chat_container__inner__bottom__right img[data-v-317790a4] {\n  max-width: 250px;\n}\n.chat_container__inner__bottom__right__bottom[data-v-317790a4] {\n  position: absolute;\n  right: 0;\n  bottom: 0;\n  width: 100%;\n  padding: 2px;\n  background: #ffffff;\n}\n.chat_container__inner__bottom__right__bottom input[data-v-317790a4] {\n  background: #ffffff;\n}\n.chat_container__inner__bottom__right__bottom img[data-v-317790a4] {\n  transform: rotate(-210deg);\n}\n[data-v-317790a4]::-webkit-scrollbar {\n  width: 5px;\n}\n[data-v-317790a4]::-webkit-scrollbar-track {\n  width: 5px;\n  background: #f5f5f5;\n}\n[data-v-317790a4]::-webkit-scrollbar-thumb {\n  width: 1em;\n  background-color: #ddd;\n  outline: 1px solid slategrey;\n  border-radius: 1rem;\n}", ""]);
 
 // exports
 

@@ -75,19 +75,6 @@ export default {
             isAdmin: false
         }
     },
-    created() {
-        window.Echo = new Echo({
-            broadcaster: 'pusher',
-            key: '47b97d41f73ba8738cc5',
-            cluster: 'ap2',
-            useTLS: true
-        })
-
-        window.Echo.channel('messages')
-            .listen('MessagesUpdated', (e) => {
-                this.echoReceived(e);
-            });
-    },
     async mounted() {
         this.nothingOn = false;
         this.fetching = true;
@@ -95,6 +82,18 @@ export default {
             this.activeId = response.data.id;
             this.username = response.data.name;
             this.isAdmin = parseInt(response.data.is_admin);
+            window.Echo = new Echo({
+                broadcaster: 'pusher',
+                key: '47b97d41f73ba8738cc5',
+                cluster: 'ap2',
+                useTLS: true,
+                csrfToken: window.options.csrfToken
+            })
+
+            window.Echo.private('messages.'+ response.data.id)
+                .listen('MessagesUpdated', (e) => {
+                    this.echoReceived(e);
+                });
         });
         await this.fetchChat();
     },

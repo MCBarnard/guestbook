@@ -18,6 +18,10 @@
 
 </head>
 <body>
+    <!-- Scripts -->
+    <script type="application/javascript">
+        window.options = {csrfToken : '{{csrf_token()}}'};
+    </script>
     <div class="content" id="app">
         @yield('content')
     </div>

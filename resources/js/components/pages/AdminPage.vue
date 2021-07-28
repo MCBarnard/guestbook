@@ -86,10 +86,11 @@ export default {
             broadcaster: 'pusher',
             key: '47b97d41f73ba8738cc5',
             cluster: 'ap2',
-            useTLS: true
+            useTLS: true,
+            csrfToken: window.options.csrfToken
         })
 
-        window.Echo.channel('messages')
+        window.Echo.private('messages.admin')
             .listen('MessagesUpdated', e => {
                 this.echoReceived(e);
             });
