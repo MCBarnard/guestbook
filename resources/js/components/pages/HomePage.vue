@@ -128,39 +128,83 @@ export default {
                 }
             });
         },
+        handleNewMessage(message) {
+            this.activeData.messages.push({
+                id: message.message_id,
+                admin: message.from_admin,
+                message: message.message,
+                new: false,
+                timestamp: message.created_at,
+                user_id: message.user_id
+            });
+            this.scrollDown();
+        },
+        async handleEditMessage(message) {
+            if (typeof this.activeData !== "undefined" && this.activeData.messages.length !== 0) {
+                this.activeData.messages.forEach(item => {
+                    if (parseInt(item.message_id) === parseInt(message.message_id)) {
+                        item.message = message.message;
+                    }
+                });
+            }
+        },
+        async handleDeleteMessage(message) {
+            if (typeof this.activeData !== "undefined" && this.activeData.messages.length !== 0) {
+                let indexToSplice;
+                this.activeData.messages.forEach((item, index) => {
+                    if (parseInt(item.message_id) === parseInt(message.message_id)) {
+                        indexToSplice = index;
+                    }
+                });
+                this.activeData.messages.splice(indexToSplice, 1);
+            }
+        },
         async echoReceived(echo) {
+            // Sanity check, this was to prevent users from reading other user's messages
+            // when we were broadcasting to a public channel but we now broadcast on private channels
             if (echo.user_id === this.activeId) {
-                // if we have an open chat, and the active chat is the echoed chat and it isnt a delete broadcast push to chat
-                if (typeof this.activeData !== "undefined" && echo.action === "new") {
-                    this.activeData.messages.push({
-                        id: echo.message_id,
-                        admin: echo.from_admin,
-                        message: echo.message,
-                        new: false,
-                        timestamp: echo.created_at,
-                        user_id: echo.user_id
-                    });
-                    this.scrollDown();
-                } else if (echo.action === "delete") {
-                    for (let i = 0; i < this.activeData.messages.length; i++) {
-                        const messageIsCorrectMessage_ID = parseInt(this.activeData.messages[i].message_id) === parseInt(echo.message_id)
-                        const messageIsCorrectID = parseInt(this.activeData.messages[i].id) === parseInt(echo.message_id)
-                        if (messageIsCorrectMessage_ID || messageIsCorrectID) {
-                            this.activeData.messages.splice(i, 1);
-                            i = this.activeData.messages.length;
-                        }
-                    }
-                    this.scrollDown();
-                } else if (typeof this.activeData !== "undefined" && echo.action === "edit") {
-                    if (typeof this.activeData !== "undefined" && this.activeData.messages.length !== 0) {
-                        for (let x = 0; x < this.activeData.messages.length; x++) {
-                            if (parseInt(this.activeData.messages[x].message_id) === parseInt(echo.message_id)) {
-                                this.activeData.messages[x].message = echo.message;
-                            }
-                        }
-                    }
-                    this.scrollDown();
+                switch (echo.action) {
+                    case "new":
+                        this.handleNewMessage(echo);
+                        break;
+                    case "edit":
+                        this.handleEditMessage(echo);
+                        break;
+                    case "delete":
+                        this.handleDeleteMessage(echo);
+                        break;
                 }
+                // if we have an open chat, and the active chat is the echoed chat and it isnt a delete broadcast push to chat
+                // if (typeof this.activeData !== "undefined" && echo.action === "new") {
+                //     this.activeData.messages.push({
+                //         id: echo.message_id,
+                //         admin: echo.from_admin,
+                //         message: echo.message,
+                //         new: false,
+                //         timestamp: echo.created_at,
+                //         user_id: echo.user_id
+                //     });
+                //     this.scrollDown();
+                // } else if (echo.action === "delete") {
+                //     for (let i = 0; i < this.activeData.messages.length; i++) {
+                //         const messageIsCorrectMessage_ID = parseInt(this.activeData.messages[i].message_id) === parseInt(echo.message_id)
+                //         const messageIsCorrectID = parseInt(this.activeData.messages[i].id) === parseInt(echo.message_id)
+                //         if (messageIsCorrectMessage_ID || messageIsCorrectID) {
+                //             this.activeData.messages.splice(i, 1);
+                //             i = this.activeData.messages.length;
+                //         }
+                //     }
+                //     this.scrollDown();
+                // } else if (typeof this.activeData !== "undefined" && echo.action === "edit") {
+                //     if (typeof this.activeData !== "undefined" && this.activeData.messages.length !== 0) {
+                //         for (let x = 0; x < this.activeData.messages.length; x++) {
+                //             if (parseInt(this.activeData.messages[x].message_id) === parseInt(echo.message_id)) {
+                //                 this.activeData.messages[x].message = echo.message;
+                //             }
+                //         }
+                //     }
+                //     this.scrollDown();
+                // }
             }
         },
         scrollDown() {

@@ -6,6 +6,7 @@ use App\Events\MessagesUpdated;
 use App\Message;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
 class MessageController extends Controller
@@ -49,14 +50,23 @@ class MessageController extends Controller
      *
      * @return Response
      */
-    public function readMessages($userId=null)
+    public function readMessages(Request $request, $userId=null)
     {
+        $request->validate([
+            'set_opened' => 'string|min:0|max:1'
+        ]);
         if(Auth::user()->is_admin) {
-            // Update unread
-            $unreadFromUser = Message::Where('user_id', $userId)->where('opened', false)->get();
-            foreach ($unreadFromUser as $msg) {
-                $msg->opened = true;
-                $msg->save();
+            Log::debug(print_r($request->all(), true));
+            if ($request->input('set_opened') !== "0") {
+                Log::debug("Setting everything to read");
+                // Update unread
+                $unreadFromUser = Message::Where('user_id', $userId)->where('opened', false)->get();
+                foreach ($unreadFromUser as $msg) {
+                    $msg->opened = true;
+                    $msg->save();
+                }
+            } else {
+                Log::debug("Not setting everything to read");
             }
             $messages = Message::Where('user_id', $userId)->get();
         } else {

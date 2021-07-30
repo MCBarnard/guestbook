@@ -10,7 +10,7 @@
                 <div class="chat_container__inner__bottom__left">
                     <!--         USER PROFILES               -->
                     <div class="chat_container__inner__bottom__left__bottom">
-                        <ProfileBlock @chat-selected="fetchChat(user.user_id)" :newMessage="user.new" v-for="(user, index) in activeThreads" :user="user" :key="user.user_id" />
+                        <ProfileBlock @chat-selected="fetchChat(user.user_id)" :newMessage="user.new" v-for="(user, index) in activeThreads" :user="user" :key="index" />
                     </div>
                 </div>
                 <div class="chat_container__inner__bottom__right">
@@ -137,6 +137,17 @@ export default {
                 wrapper.scrollTop = div.clientHeight
             }, 300);
         },
+        pushToThreads(message) {
+            this.threads.push({
+                id: message.message_id,
+                date: message.created_at,
+                email: message.email,
+                lastMessage: message.message,
+                name: message.name,
+                new: !message.opened,
+                user_id: message.user_id
+            });
+        },
         async sendMessage(id) {
             this.fetching = true;
             const data = {
@@ -149,73 +160,110 @@ export default {
                 }
             });
         },
-        async echoReceived(echo) {
+        handleNewMessage(message) {
+            // Push to side menu
             if (this.threads.length > 0) {
-                for (let i = 0; i < this.threads.length; i++) {
-                    // handle all edit
-                    if (echo.action === "edit") {
-                        if (typeof this.activeData !== "undefined" && this.activeData.messages.length !== 0) {
-                            for (let x = 0; x < this.activeData.messages.length; x++) {
-                                if (parseInt(this.activeData.messages[x].message_id) === parseInt(echo.message_id)) {
-                                    this.activeData.messages[x].message = echo.message;
-                                }
-                            }
-                        }
-                        // if user_id in first nav matches echo user_id and it wasnt a delete
-                    } else if (this.threads[i].user_id === echo.user_id && echo.action === "new") {
-                        if (!echo.from_admin) {
-                            this.threads[i].date = echo.created_at;
-                            this.threads[i].new = typeof this.activeData === "undefined" || this.activeData.activeId !== echo.user_id;
-                            this.threads[i].lastMessage = echo.message;
-                        }
-                        i = this.threads.length;
-                    } else if (i === this.threads.length - 1 && echo.action === "new") {
-                        this.threads.push({
-                            id: echo.message_id,
-                            date: echo.created_at,
-                            email: echo.email,
-                            lastMessage: echo.message,
-                            name: echo.name,
-                            new: !echo.opened,
-                            user_id: echo.user_id
-                        });
-                        // if it is delete and the current nav has the same message_id as echoed id
-                    } else if (echo.action === "delete" && this.threads[i].user_id === echo.user_id) {
-                        if (typeof this.activeData !== "undefined" && this.activeData.messages.length > 1) {
-                            for (let x = 0; x < this.activeData.messages.length; x++) {
-                                if (parseInt(this.activeData.messages[x].message_id) === parseInt(echo.message_id)) {
-                                    this.activeData.messages.splice(x, 1);
-                                }
-                            }
-                        } else {
-                            this.threads.splice(i, 1);
-                            this.activeData = undefined;
-                            this.nothingOn = true
-                        }
+                let found = false;
+                this.threads.forEach(item => {
+                    if (!message.from_admin && item.user_id === message.user_id) {
+                        found = true;
+                        item.date = message.created_at;
+                        item.new = typeof this.activeData === "undefined" || this.activeData.activeId !== message.user_id;
+                        item.lastMessage = message.message;
                     }
-                }
-            } else if (echo.action == "new") {
-                this.threads.push({
-                    id: echo.message_id,
-                    date: echo.created_at,
-                    email: echo.email,
-                    lastMessage: echo.message,
-                    name: echo.name,
-                    new: !echo.opened,
-                    user_id: echo.user_id
                 });
+                if (!found && !message.from_admin) {
+                    this.pushToThreads(message);
+                }
+            } else {
+                this.pushToThreads(message);
             }
-            // if we have an open chat, and the active chat is the echoed chat and it isnt a delete broadcast push to chat
-            if (typeof this.activeData !== "undefined" && this.activeData.activeId === echo.user_id && echo.action === "new") {
+            // Push to view
+            if (typeof this.activeData !== "undefined" && this.activeData.activeId === message.user_id) {
                 this.activeData.messages.push({
-                    id: echo.message_id,
-                    admin: echo.from_admin,
-                    message: echo.message,
+                    id: message.message_id,
+                    admin: message.from_admin,
+                    message: message.message,
                     new: false,
-                    timestamp: echo.created_at,
-                    user_id: echo.user_id
+                    timestamp: message.created_at,
+                    user_id: message.user_id
                 });
                 this.scrollDown();
+            }
+        },
+        async handleEditMessage(message) {
+            if (typeof this.activeData !== "undefined" && this.activeData.messages.length !== 0) {
+                this.activeData.messages.forEach(item => {
+                    if (parseInt(item.message_id) === parseInt(message.message_id)) {
+                        item.message = message.message;
+                    }
+                });
+            }
+            let itemIndex;
+            this.threads.forEach((item, index) => {
+                if (parseInt(item.user_id) === parseInt(message.user_id)) {
+                    itemIndex = index;
+                }
+            });
+            await axios.get(`/admin/messages/${message.user_id}?set_opened=0`).then(response => {
+                if (response.data.length > 0) {
+                    const lastItem = response.data[response.data.length - 1];
+                    this.threads[itemIndex].id = lastItem.message_id;
+                    this.threads[itemIndex].date = lastItem.timestamp;
+                    this.threads[itemIndex].email = lastItem.email;
+                    this.threads[itemIndex].lastMessage = lastItem.message;
+                    this.threads[itemIndex].new = lastItem.new;
+                }
+            });
+
+        },
+        async handleDeleteMessage(message) {
+            const activeDataNotUndefined = typeof this.activeData !== "undefined";
+            const hasMessages = activeDataNotUndefined ? this.activeData.messages.length > 1 : false;
+            const viewingCurrentUserMessages = activeDataNotUndefined ? this.activeData.activeId === message.user_id : false;
+
+            if (activeDataNotUndefined && hasMessages && viewingCurrentUserMessages) {
+                let indexToSplice;
+                this.activeData.messages.forEach((item, index) => {
+                    if (parseInt(item.message_id) === parseInt(message.message_id)) {
+                        indexToSplice = index;
+                    }
+                });
+                this.activeData.messages.splice(indexToSplice, 1);
+            } else {
+                let itemIndex;
+                this.threads.forEach((item, index) => {
+                    if (parseInt(item.user_id) === parseInt(message.user_id)) {
+                        itemIndex = index;
+                    }
+                });
+                await axios.get(`/admin/messages/${message.user_id}?set_opened=0`).then(response => {
+                    if (response.data.length === 0) {
+                        this.threads.splice(itemIndex, 1);
+                        this.activeData = undefined;
+                        this.nothingOn = true
+                    } else if (response.data.length > 0) {
+                        const lastItem = response.data[response.data.length - 1];
+                        this.threads[itemIndex].id = lastItem.message_id;
+                        this.threads[itemIndex].date = lastItem.timestamp;
+                        this.threads[itemIndex].email = lastItem.email;
+                        this.threads[itemIndex].lastMessage = lastItem.message;
+                        this.threads[itemIndex].new = lastItem.new;
+                    }
+                });
+            }
+        },
+        async echoReceived(echo) {
+            switch (echo.action) {
+                case "new":
+                    this.handleNewMessage(echo);
+                    break;
+                case "edit":
+                    this.handleEditMessage(echo);
+                    break;
+                case "delete":
+                    this.handleDeleteMessage(echo);
+                    break;
             }
         }
     }

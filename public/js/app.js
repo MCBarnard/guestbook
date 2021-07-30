@@ -2312,6 +2312,17 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
         wrapper.scrollTop = div.clientHeight;
       }, 300);
     },
+    pushToThreads: function pushToThreads(message) {
+      this.threads.push({
+        id: message.message_id,
+        date: message.created_at,
+        email: message.email,
+        lastMessage: message.message,
+        name: message.name,
+        "new": !message.opened,
+        user_id: message.user_id
+      });
+    },
     sendMessage: function sendMessage(id) {
       var _this5 = this;
 
@@ -2341,94 +2352,178 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
         }, _callee4);
       }))();
     },
-    echoReceived: function echoReceived(echo) {
+    handleNewMessage: function handleNewMessage(message) {
       var _this6 = this;
 
-      return _asyncToGenerator( /*#__PURE__*/_babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.mark(function _callee5() {
-        var i, x, _x;
+      // Push to side menu
+      if (this.threads.length > 0) {
+        var found = false;
+        this.threads.forEach(function (item) {
+          if (!message.from_admin && item.user_id === message.user_id) {
+            found = true;
+            item.date = message.created_at;
+            item["new"] = typeof _this6.activeData === "undefined" || _this6.activeData.activeId !== message.user_id;
+            item.lastMessage = message.message;
+          }
+        });
 
+        if (!found && !message.from_admin) {
+          this.pushToThreads(message);
+        }
+      } else {
+        this.pushToThreads(message);
+      } // Push to view
+
+
+      if (typeof this.activeData !== "undefined" && this.activeData.activeId === message.user_id) {
+        this.activeData.messages.push({
+          id: message.message_id,
+          admin: message.from_admin,
+          message: message.message,
+          "new": false,
+          timestamp: message.created_at,
+          user_id: message.user_id
+        });
+        this.scrollDown();
+      }
+    },
+    handleEditMessage: function handleEditMessage(message) {
+      var _this7 = this;
+
+      return _asyncToGenerator( /*#__PURE__*/_babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.mark(function _callee5() {
+        var itemIndex;
         return _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.wrap(function _callee5$(_context5) {
           while (1) {
             switch (_context5.prev = _context5.next) {
               case 0:
-                if (_this6.threads.length > 0) {
-                  for (i = 0; i < _this6.threads.length; i++) {
-                    // handle all edit
-                    if (echo.action === "edit") {
-                      if (typeof _this6.activeData !== "undefined" && _this6.activeData.messages.length !== 0) {
-                        for (x = 0; x < _this6.activeData.messages.length; x++) {
-                          if (parseInt(_this6.activeData.messages[x].message_id) === parseInt(echo.message_id)) {
-                            _this6.activeData.messages[x].message = echo.message;
-                          }
-                        }
-                      } // if user_id in first nav matches echo user_id and it wasnt a delete
-
-                    } else if (_this6.threads[i].user_id === echo.user_id && echo.action === "new") {
-                      if (!echo.from_admin) {
-                        _this6.threads[i].date = echo.created_at;
-                        _this6.threads[i]["new"] = typeof _this6.activeData === "undefined" || _this6.activeData.activeId !== echo.user_id;
-                        _this6.threads[i].lastMessage = echo.message;
-                      }
-
-                      i = _this6.threads.length;
-                    } else if (i === _this6.threads.length - 1 && echo.action === "new") {
-                      _this6.threads.push({
-                        id: echo.message_id,
-                        date: echo.created_at,
-                        email: echo.email,
-                        lastMessage: echo.message,
-                        name: echo.name,
-                        "new": !echo.opened,
-                        user_id: echo.user_id
-                      }); // if it is delete and the current nav has the same message_id as echoed id
-
-                    } else if (echo.action === "delete" && _this6.threads[i].user_id === echo.user_id) {
-                      if (typeof _this6.activeData !== "undefined" && _this6.activeData.messages.length > 1) {
-                        for (_x = 0; _x < _this6.activeData.messages.length; _x++) {
-                          if (parseInt(_this6.activeData.messages[_x].message_id) === parseInt(echo.message_id)) {
-                            _this6.activeData.messages.splice(_x, 1);
-                          }
-                        }
-                      } else {
-                        _this6.threads.splice(i, 1);
-
-                        _this6.activeData = undefined;
-                        _this6.nothingOn = true;
-                      }
+                if (typeof _this7.activeData !== "undefined" && _this7.activeData.messages.length !== 0) {
+                  _this7.activeData.messages.forEach(function (item) {
+                    if (parseInt(item.message_id) === parseInt(message.message_id)) {
+                      item.message = message.message;
                     }
-                  }
-                } else if (echo.action == "new") {
-                  _this6.threads.push({
-                    id: echo.message_id,
-                    date: echo.created_at,
-                    email: echo.email,
-                    lastMessage: echo.message,
-                    name: echo.name,
-                    "new": !echo.opened,
-                    user_id: echo.user_id
                   });
-                } // if we have an open chat, and the active chat is the echoed chat and it isnt a delete broadcast push to chat
-
-
-                if (typeof _this6.activeData !== "undefined" && _this6.activeData.activeId === echo.user_id && echo.action === "new") {
-                  _this6.activeData.messages.push({
-                    id: echo.message_id,
-                    admin: echo.from_admin,
-                    message: echo.message,
-                    "new": false,
-                    timestamp: echo.created_at,
-                    user_id: echo.user_id
-                  });
-
-                  _this6.scrollDown();
                 }
 
-              case 2:
+                _this7.threads.forEach(function (item, index) {
+                  if (parseInt(item.user_id) === parseInt(message.user_id)) {
+                    itemIndex = index;
+                  }
+                });
+
+                _context5.next = 4;
+                return axios.get("/admin/messages/".concat(message.user_id, "?set_opened=0")).then(function (response) {
+                  if (response.data.length > 0) {
+                    var lastItem = response.data[response.data.length - 1];
+                    _this7.threads[itemIndex].id = lastItem.message_id;
+                    _this7.threads[itemIndex].date = lastItem.timestamp;
+                    _this7.threads[itemIndex].email = lastItem.email;
+                    _this7.threads[itemIndex].lastMessage = lastItem.message;
+                    _this7.threads[itemIndex]["new"] = lastItem["new"];
+                  }
+                });
+
+              case 4:
               case "end":
                 return _context5.stop();
             }
           }
         }, _callee5);
+      }))();
+    },
+    handleDeleteMessage: function handleDeleteMessage(message) {
+      var _this8 = this;
+
+      return _asyncToGenerator( /*#__PURE__*/_babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.mark(function _callee6() {
+        var activeDataNotUndefined, hasMessages, viewingCurrentUserMessages, indexToSplice, itemIndex;
+        return _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.wrap(function _callee6$(_context6) {
+          while (1) {
+            switch (_context6.prev = _context6.next) {
+              case 0:
+                activeDataNotUndefined = typeof _this8.activeData !== "undefined";
+                hasMessages = activeDataNotUndefined ? _this8.activeData.messages.length > 1 : false;
+                viewingCurrentUserMessages = activeDataNotUndefined ? _this8.activeData.activeId === message.user_id : false;
+
+                if (!(activeDataNotUndefined && hasMessages && viewingCurrentUserMessages)) {
+                  _context6.next = 8;
+                  break;
+                }
+
+                _this8.activeData.messages.forEach(function (item, index) {
+                  if (parseInt(item.message_id) === parseInt(message.message_id)) {
+                    indexToSplice = index;
+                  }
+                });
+
+                _this8.activeData.messages.splice(indexToSplice, 1);
+
+                _context6.next = 11;
+                break;
+
+              case 8:
+                _this8.threads.forEach(function (item, index) {
+                  if (parseInt(item.user_id) === parseInt(message.user_id)) {
+                    itemIndex = index;
+                  }
+                });
+
+                _context6.next = 11;
+                return axios.get("/admin/messages/".concat(message.user_id, "?set_opened=0")).then(function (response) {
+                  if (response.data.length === 0) {
+                    _this8.threads.splice(itemIndex, 1);
+
+                    _this8.activeData = undefined;
+                    _this8.nothingOn = true;
+                  } else if (response.data.length > 0) {
+                    var lastItem = response.data[response.data.length - 1];
+                    _this8.threads[itemIndex].id = lastItem.message_id;
+                    _this8.threads[itemIndex].date = lastItem.timestamp;
+                    _this8.threads[itemIndex].email = lastItem.email;
+                    _this8.threads[itemIndex].lastMessage = lastItem.message;
+                    _this8.threads[itemIndex]["new"] = lastItem["new"];
+                  }
+                });
+
+              case 11:
+              case "end":
+                return _context6.stop();
+            }
+          }
+        }, _callee6);
+      }))();
+    },
+    echoReceived: function echoReceived(echo) {
+      var _this9 = this;
+
+      return _asyncToGenerator( /*#__PURE__*/_babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.mark(function _callee7() {
+        return _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.wrap(function _callee7$(_context7) {
+          while (1) {
+            switch (_context7.prev = _context7.next) {
+              case 0:
+                _context7.t0 = echo.action;
+                _context7.next = _context7.t0 === "new" ? 3 : _context7.t0 === "edit" ? 5 : _context7.t0 === "delete" ? 7 : 9;
+                break;
+
+              case 3:
+                _this9.handleNewMessage(echo);
+
+                return _context7.abrupt("break", 9);
+
+              case 5:
+                _this9.handleEditMessage(echo);
+
+                return _context7.abrupt("break", 9);
+
+              case 7:
+                _this9.handleDeleteMessage(echo);
+
+                return _context7.abrupt("break", 9);
+
+              case 9:
+              case "end":
+                return _context7.stop();
+            }
+          }
+        }, _callee7);
       }))();
     }
   }
@@ -2635,52 +2730,31 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
         }, _callee3);
       }))();
     },
-    echoReceived: function echoReceived(echo) {
+    handleNewMessage: function handleNewMessage(message) {
+      this.activeData.messages.push({
+        id: message.message_id,
+        admin: message.from_admin,
+        message: message.message,
+        "new": false,
+        timestamp: message.created_at,
+        user_id: message.user_id
+      });
+      this.scrollDown();
+    },
+    handleEditMessage: function handleEditMessage(message) {
       var _this4 = this;
 
       return _asyncToGenerator( /*#__PURE__*/_babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.mark(function _callee4() {
-        var i, messageIsCorrectMessage_ID, messageIsCorrectID, x;
         return _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.wrap(function _callee4$(_context4) {
           while (1) {
             switch (_context4.prev = _context4.next) {
               case 0:
-                if (echo.user_id === _this4.activeId) {
-                  // if we have an open chat, and the active chat is the echoed chat and it isnt a delete broadcast push to chat
-                  if (typeof _this4.activeData !== "undefined" && echo.action === "new") {
-                    _this4.activeData.messages.push({
-                      id: echo.message_id,
-                      admin: echo.from_admin,
-                      message: echo.message,
-                      "new": false,
-                      timestamp: echo.created_at,
-                      user_id: echo.user_id
-                    });
-
-                    _this4.scrollDown();
-                  } else if (echo.action === "delete") {
-                    for (i = 0; i < _this4.activeData.messages.length; i++) {
-                      messageIsCorrectMessage_ID = parseInt(_this4.activeData.messages[i].message_id) === parseInt(echo.message_id);
-                      messageIsCorrectID = parseInt(_this4.activeData.messages[i].id) === parseInt(echo.message_id);
-
-                      if (messageIsCorrectMessage_ID || messageIsCorrectID) {
-                        _this4.activeData.messages.splice(i, 1);
-
-                        i = _this4.activeData.messages.length;
-                      }
+                if (typeof _this4.activeData !== "undefined" && _this4.activeData.messages.length !== 0) {
+                  _this4.activeData.messages.forEach(function (item) {
+                    if (parseInt(item.message_id) === parseInt(message.message_id)) {
+                      item.message = message.message;
                     }
-
-                    _this4.scrollDown();
-                  } else if (typeof _this4.activeData !== "undefined" && echo.action === "edit") {
-                    if (typeof _this4.activeData !== "undefined" && _this4.activeData.messages.length !== 0) {
-                      for (x = 0; x < _this4.activeData.messages.length; x++) {
-                        if (parseInt(_this4.activeData.messages[x].message_id) === parseInt(echo.message_id)) {
-                          _this4.activeData.messages[x].message = echo.message;
-                        }
-                      }
-                    }
-
-                    _this4.scrollDown();
-                  }
+                  });
                 }
 
               case 1:
@@ -2689,6 +2763,73 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
             }
           }
         }, _callee4);
+      }))();
+    },
+    handleDeleteMessage: function handleDeleteMessage(message) {
+      var _this5 = this;
+
+      return _asyncToGenerator( /*#__PURE__*/_babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.mark(function _callee5() {
+        var indexToSplice;
+        return _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.wrap(function _callee5$(_context5) {
+          while (1) {
+            switch (_context5.prev = _context5.next) {
+              case 0:
+                if (typeof _this5.activeData !== "undefined" && _this5.activeData.messages.length !== 0) {
+                  _this5.activeData.messages.forEach(function (item, index) {
+                    if (parseInt(item.message_id) === parseInt(message.message_id)) {
+                      indexToSplice = index;
+                    }
+                  });
+
+                  _this5.activeData.messages.splice(indexToSplice, 1);
+                }
+
+              case 1:
+              case "end":
+                return _context5.stop();
+            }
+          }
+        }, _callee5);
+      }))();
+    },
+    echoReceived: function echoReceived(echo) {
+      var _this6 = this;
+
+      return _asyncToGenerator( /*#__PURE__*/_babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.mark(function _callee6() {
+        return _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.wrap(function _callee6$(_context6) {
+          while (1) {
+            switch (_context6.prev = _context6.next) {
+              case 0:
+                if (!(echo.user_id === _this6.activeId)) {
+                  _context6.next = 10;
+                  break;
+                }
+
+                _context6.t0 = echo.action;
+                _context6.next = _context6.t0 === "new" ? 4 : _context6.t0 === "edit" ? 6 : _context6.t0 === "delete" ? 8 : 10;
+                break;
+
+              case 4:
+                _this6.handleNewMessage(echo);
+
+                return _context6.abrupt("break", 10);
+
+              case 6:
+                _this6.handleEditMessage(echo);
+
+                return _context6.abrupt("break", 10);
+
+              case 8:
+                _this6.handleDeleteMessage(echo);
+
+                return _context6.abrupt("break", 10);
+
+              case 10:
+              case "end":
+                return _context6.stop();
+            }
+          }
+        }, _callee6);
       }))();
     },
     scrollDown: function scrollDown() {
@@ -46378,7 +46519,7 @@ var render = function() {
               { staticClass: "chat_container__inner__bottom__left__bottom" },
               _vm._l(_vm.activeThreads, function(user, index) {
                 return _c("ProfileBlock", {
-                  key: user.user_id,
+                  key: index,
                   attrs: { newMessage: user.new, user: user },
                   on: {
                     "chat-selected": function($event) {
