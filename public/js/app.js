@@ -2039,7 +2039,7 @@ __webpack_require__.r(__webpack_exports__);
       var _this = this;
 
       this.sending = true;
-      var path = this.$props.message.admin ? 'admin/messages' : 'home';
+      var path = this.$props.admin ? 'admin/messages' : 'home';
       var data = {
         message: this.newMessage
       };
@@ -2354,38 +2354,38 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
                 if (_this6.threads.length > 0) {
                   for (i = 0; i < _this6.threads.length; i++) {
                     // handle all edit
-                    if (echo.message.action === "edit") {
+                    if (echo.action === "edit") {
                       if (typeof _this6.activeData !== "undefined" && _this6.activeData.messages.length !== 0) {
                         for (x = 0; x < _this6.activeData.messages.length; x++) {
-                          if (parseInt(_this6.activeData.messages[x].message_id) === parseInt(echo.message.message_id)) {
-                            _this6.activeData.messages[x].message = echo.message.message;
+                          if (parseInt(_this6.activeData.messages[x].message_id) === parseInt(echo.message_id)) {
+                            _this6.activeData.messages[x].message = echo.message;
                           }
                         }
                       } // if user_id in first nav matches echo user_id and it wasnt a delete
 
-                    } else if (_this6.threads[i].user_id === echo.message.user_id && echo.message.action === "new") {
-                      if (!echo.message.from_admin) {
-                        _this6.threads[i].date = echo.message.created_at;
-                        _this6.threads[i]["new"] = typeof _this6.activeData === "undefined" || _this6.activeData.activeId !== echo.message.user_id;
-                        _this6.threads[i].lastMessage = echo.message.message;
+                    } else if (_this6.threads[i].user_id === echo.user_id && echo.action === "new") {
+                      if (!echo.from_admin) {
+                        _this6.threads[i].date = echo.created_at;
+                        _this6.threads[i]["new"] = typeof _this6.activeData === "undefined" || _this6.activeData.activeId !== echo.user_id;
+                        _this6.threads[i].lastMessage = echo.message;
                       }
 
                       i = _this6.threads.length;
-                    } else if (i === _this6.threads.length - 1 && echo.message.action === "new") {
+                    } else if (i === _this6.threads.length - 1 && echo.action === "new") {
                       _this6.threads.push({
-                        id: echo.message.message_id,
-                        date: echo.message.created_at,
-                        email: echo.message.email,
-                        lastMessage: echo.message.message,
-                        name: echo.message.name,
-                        "new": !echo.message.opened,
-                        user_id: echo.message.user_id
+                        id: echo.message_id,
+                        date: echo.created_at,
+                        email: echo.email,
+                        lastMessage: echo.message,
+                        name: echo.name,
+                        "new": !echo.opened,
+                        user_id: echo.user_id
                       }); // if it is delete and the current nav has the same message_id as echoed id
 
-                    } else if (echo.message.action === "delete" && _this6.threads[i].user_id === echo.message.user_id) {
+                    } else if (echo.action === "delete" && _this6.threads[i].user_id === echo.user_id) {
                       if (typeof _this6.activeData !== "undefined" && _this6.activeData.messages.length > 1) {
                         for (_x = 0; _x < _this6.activeData.messages.length; _x++) {
-                          if (parseInt(_this6.activeData.messages[_x].message_id) === parseInt(echo.message.message_id)) {
+                          if (parseInt(_this6.activeData.messages[_x].message_id) === parseInt(echo.message_id)) {
                             _this6.activeData.messages.splice(_x, 1);
                           }
                         }
@@ -2397,27 +2397,27 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
                       }
                     }
                   }
-                } else if (echo.message.action = "new") {
+                } else if (echo.action == "new") {
                   _this6.threads.push({
-                    id: echo.message.message_id,
-                    date: echo.message.created_at,
-                    email: echo.message.email,
-                    lastMessage: echo.message.message,
-                    name: echo.message.name,
-                    "new": !echo.message.opened,
-                    user_id: echo.message.user_id
+                    id: echo.message_id,
+                    date: echo.created_at,
+                    email: echo.email,
+                    lastMessage: echo.message,
+                    name: echo.name,
+                    "new": !echo.opened,
+                    user_id: echo.user_id
                   });
                 } // if we have an open chat, and the active chat is the echoed chat and it isnt a delete broadcast push to chat
 
 
-                if (typeof _this6.activeData !== "undefined" && _this6.activeData.activeId === echo.message.user_id && echo.message.action === "new") {
+                if (typeof _this6.activeData !== "undefined" && _this6.activeData.activeId === echo.user_id && echo.action === "new") {
                   _this6.activeData.messages.push({
-                    id: echo.message.message_id,
-                    admin: echo.message.from_admin,
-                    message: echo.message.message,
+                    id: echo.message_id,
+                    admin: echo.from_admin,
+                    message: echo.message,
                     "new": false,
-                    timestamp: echo.message.created_at,
-                    user_id: echo.message.user_id
+                    timestamp: echo.created_at,
+                    user_id: echo.user_id
                   });
 
                   _this6.scrollDown();
@@ -2644,23 +2644,23 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
           while (1) {
             switch (_context4.prev = _context4.next) {
               case 0:
-                if (echo.message.user_id === _this4.activeId) {
+                if (echo.user_id === _this4.activeId) {
                   // if we have an open chat, and the active chat is the echoed chat and it isnt a delete broadcast push to chat
-                  if (typeof _this4.activeData !== "undefined" && echo.message.action === "new") {
+                  if (typeof _this4.activeData !== "undefined" && echo.action === "new") {
                     _this4.activeData.messages.push({
-                      id: echo.message.message_id,
-                      admin: echo.message.from_admin,
-                      message: echo.message.message,
+                      id: echo.message_id,
+                      admin: echo.from_admin,
+                      message: echo.message,
                       "new": false,
-                      timestamp: echo.message.created_at,
-                      user_id: echo.message.user_id
+                      timestamp: echo.created_at,
+                      user_id: echo.user_id
                     });
 
                     _this4.scrollDown();
-                  } else if (echo.message.action === "delete") {
+                  } else if (echo.action === "delete") {
                     for (i = 0; i < _this4.activeData.messages.length; i++) {
-                      messageIsCorrectMessage_ID = parseInt(_this4.activeData.messages[i].message_id) === parseInt(echo.message.message_id);
-                      messageIsCorrectID = parseInt(_this4.activeData.messages[i].id) === parseInt(echo.message.message_id);
+                      messageIsCorrectMessage_ID = parseInt(_this4.activeData.messages[i].message_id) === parseInt(echo.message_id);
+                      messageIsCorrectID = parseInt(_this4.activeData.messages[i].id) === parseInt(echo.message_id);
 
                       if (messageIsCorrectMessage_ID || messageIsCorrectID) {
                         _this4.activeData.messages.splice(i, 1);
@@ -2670,11 +2670,11 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
                     }
 
                     _this4.scrollDown();
-                  } else if (typeof _this4.activeData !== "undefined" && echo.message.action === "edit") {
+                  } else if (typeof _this4.activeData !== "undefined" && echo.action === "edit") {
                     if (typeof _this4.activeData !== "undefined" && _this4.activeData.messages.length !== 0) {
                       for (x = 0; x < _this4.activeData.messages.length; x++) {
-                        if (parseInt(_this4.activeData.messages[x].message_id) === parseInt(echo.message.message_id)) {
-                          _this4.activeData.messages[x].message = echo.message.message;
+                        if (parseInt(_this4.activeData.messages[x].message_id) === parseInt(echo.message_id)) {
+                          _this4.activeData.messages[x].message = echo.message;
                         }
                       }
                     }
@@ -46087,7 +46087,8 @@ var render = function() {
               _vm._s(_vm.$props.message.timestamp) +
               "\n            "
           ),
-          !_vm.$props.message.admin && !_vm.$props.admin
+          (_vm.$props.admin && !_vm.$props.message.admin) ||
+          (!_vm.$props.message.admin && !_vm.$props.admin)
             ? _c("div", { staticClass: "crud-box" }, [
                 _c(
                   "button",
@@ -46419,7 +46420,7 @@ var render = function() {
                           ) {
                             return _c("MessageBlock", {
                               key: index,
-                              attrs: { admin: message.admin, message: message }
+                              attrs: { admin: 1, message: message }
                             })
                           }),
                           1
@@ -46671,7 +46672,7 @@ var render = function() {
                         ],
                         staticClass: "form-control",
                         attrs: {
-                          disabled: _vm.nothingOn,
+                          disabled: _vm.nothingOn || _vm.showSpinner,
                           name: "message-input",
                           type: "text",
                           placeholder: "Enter something here.."
@@ -46692,7 +46693,7 @@ var render = function() {
                         {
                           staticClass: "btn btn-outline-secondary",
                           attrs: {
-                            disabled: _vm.nothingOn,
+                            disabled: _vm.nothingOn || _vm.showSpinner,
                             type: "submit",
                             id: "button-addon2"
                           }

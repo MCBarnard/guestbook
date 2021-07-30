@@ -11,7 +11,7 @@
                     <button @click="handleDelete()" class="crud-action spacing-image"><img src="/images/trash-red.svg" alt=""></button>
                 </div>
                 {{ $props.message.timestamp }}
-                <div v-if="!$props.message.admin && !$props.admin" class="crud-box">
+                <div v-if="($props.admin && !$props.message.admin) || (!$props.message.admin && !$props.admin)" class="crud-box">
                     <button @click="handleEdit()" class="crud-action spacing-image"><img src="/images/pencil-yellow.svg" alt=""></button>
                     <button @click="handleDelete()" class="crud-action"><img src="/images/trash-red.svg" alt=""></button>
                 </div>
@@ -94,7 +94,7 @@ export default {
         },
         editMessage() {
             this.sending = true;
-            const path = this.$props.message.admin ? 'admin/messages' : 'home';
+            const path = this.$props.admin ? 'admin/messages' : 'home';
             const data = {
                 message: this.newMessage
             };

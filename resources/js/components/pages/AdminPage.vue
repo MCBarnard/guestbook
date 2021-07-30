@@ -18,7 +18,7 @@
                     <div class="chat_container__inner__bottom__right__top__wrapper">
                         <div id="message-box-wrapper" class="chat_container__inner__bottom__right__top">
                             <div id="message-box" class="chat_container__inner__bottom__right__top__message-box" v-if="!showSpinner && activeData">
-                                <MessageBlock v-for="(message, index) in activeData.messages" :admin="message.admin" :message="message" :key="index" />
+                                <MessageBlock v-for="(message, index) in activeData.messages" :admin="1" :message="message" :key="index" />
                             </div>
                             <div class="chat_container__inner__bottom__right__top__spinner" v-else-if="nothingOn">
                                 <div>
@@ -153,37 +153,37 @@ export default {
             if (this.threads.length > 0) {
                 for (let i = 0; i < this.threads.length; i++) {
                     // handle all edit
-                    if (echo.message.action === "edit") {
+                    if (echo.action === "edit") {
                         if (typeof this.activeData !== "undefined" && this.activeData.messages.length !== 0) {
                             for (let x = 0; x < this.activeData.messages.length; x++) {
-                                if (parseInt(this.activeData.messages[x].message_id) === parseInt(echo.message.message_id)) {
-                                    this.activeData.messages[x].message = echo.message.message;
+                                if (parseInt(this.activeData.messages[x].message_id) === parseInt(echo.message_id)) {
+                                    this.activeData.messages[x].message = echo.message;
                                 }
                             }
                         }
                         // if user_id in first nav matches echo user_id and it wasnt a delete
-                    } else if (this.threads[i].user_id === echo.message.user_id && echo.message.action === "new") {
-                        if (!echo.message.from_admin) {
-                            this.threads[i].date = echo.message.created_at;
-                            this.threads[i].new = typeof this.activeData === "undefined" || this.activeData.activeId !== echo.message.user_id;
-                            this.threads[i].lastMessage = echo.message.message;
+                    } else if (this.threads[i].user_id === echo.user_id && echo.action === "new") {
+                        if (!echo.from_admin) {
+                            this.threads[i].date = echo.created_at;
+                            this.threads[i].new = typeof this.activeData === "undefined" || this.activeData.activeId !== echo.user_id;
+                            this.threads[i].lastMessage = echo.message;
                         }
                         i = this.threads.length;
-                    } else if (i === this.threads.length - 1 && echo.message.action === "new") {
+                    } else if (i === this.threads.length - 1 && echo.action === "new") {
                         this.threads.push({
-                            id: echo.message.message_id,
-                            date: echo.message.created_at,
-                            email: echo.message.email,
-                            lastMessage: echo.message.message,
-                            name: echo.message.name,
-                            new: !echo.message.opened,
-                            user_id: echo.message.user_id
+                            id: echo.message_id,
+                            date: echo.created_at,
+                            email: echo.email,
+                            lastMessage: echo.message,
+                            name: echo.name,
+                            new: !echo.opened,
+                            user_id: echo.user_id
                         });
                         // if it is delete and the current nav has the same message_id as echoed id
-                    } else if (echo.message.action === "delete" && this.threads[i].user_id === echo.message.user_id) {
+                    } else if (echo.action === "delete" && this.threads[i].user_id === echo.user_id) {
                         if (typeof this.activeData !== "undefined" && this.activeData.messages.length > 1) {
                             for (let x = 0; x < this.activeData.messages.length; x++) {
-                                if (parseInt(this.activeData.messages[x].message_id) === parseInt(echo.message.message_id)) {
+                                if (parseInt(this.activeData.messages[x].message_id) === parseInt(echo.message_id)) {
                                     this.activeData.messages.splice(x, 1);
                                 }
                             }
@@ -194,26 +194,26 @@ export default {
                         }
                     }
                 }
-            } else if (echo.message.action = "new") {
+            } else if (echo.action == "new") {
                 this.threads.push({
-                    id: echo.message.message_id,
-                    date: echo.message.created_at,
-                    email: echo.message.email,
-                    lastMessage: echo.message.message,
-                    name: echo.message.name,
-                    new: !echo.message.opened,
-                    user_id: echo.message.user_id
+                    id: echo.message_id,
+                    date: echo.created_at,
+                    email: echo.email,
+                    lastMessage: echo.message,
+                    name: echo.name,
+                    new: !echo.opened,
+                    user_id: echo.user_id
                 });
             }
             // if we have an open chat, and the active chat is the echoed chat and it isnt a delete broadcast push to chat
-            if (typeof this.activeData !== "undefined" && this.activeData.activeId === echo.message.user_id && echo.message.action === "new") {
+            if (typeof this.activeData !== "undefined" && this.activeData.activeId === echo.user_id && echo.action === "new") {
                 this.activeData.messages.push({
-                    id: echo.message.message_id,
-                    admin: echo.message.from_admin,
-                    message: echo.message.message,
+                    id: echo.message_id,
+                    admin: echo.from_admin,
+                    message: echo.message,
                     new: false,
-                    timestamp: echo.message.created_at,
-                    user_id: echo.message.user_id
+                    timestamp: echo.created_at,
+                    user_id: echo.user_id
                 });
                 this.scrollDown();
             }

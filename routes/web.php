@@ -17,10 +17,10 @@ Auth::routes();
 Route::group(['prefix' => 'admin', 'middleware' => 'is_admin'], function($router) {
     Route::get('', 'AppController@index')->name('admin');
     $router->get('messages/all', 'MessageController@all')->name('messages');
+    $router->get('messages/{id}/delete', 'MessageController@deleteMessage')->where('id', '[0-9]+');
+    $router->put('messages/{id}/edit', 'MessageController@updateMessage')->where('id', '[0-9]+');
     $router->get('messages/{id}', 'MessageController@readMessages')->where('id', '[0-9]+')->name('messages.read');
     $router->post('messages/{id}', 'MessageController@newMessage')->where('id', '[0-9]+')->name('messages.new');
-    $router->put('messages/{id}/edit', 'MessageController@updateMessage')->where('id', '[0-9]+');
-    $router->get('messages/{id}/delete', 'MessageController@deleteMessage')->where('id', '[0-9]+');
 });
 Route::group(['prefix' => 'home', 'middleware' => 'auth'], function($router) {
     $router->get('', 'MessageController@readMessages');

@@ -4,14 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Events\MessagesUpdated;
 use App\Message;
-use App\User;
-use Illuminate\Contracts\Support\Renderable;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Redirect;
 use Symfony\Component\HttpFoundation\Response;
 
 class MessageController extends Controller
@@ -109,17 +103,8 @@ class MessageController extends Controller
                'from_admin' => false
            ]);
         }
-        $packet['message_id'] = $message->id;
-        $packet['message'] = $message->message;
-        $packet['from_admin'] = Auth::user()->is_admin;
-        $packet['action'] = 'new';
-        $packet['opened'] = $message->opened;
-        $packet['user_id'] = $message->user->id;
-        $packet['name'] = $message->user->name;
-        $packet['email'] = $message->user->email;
-        $packet['created_at'] =  date_format($message->created_at,"H:i d M Y ");
 
-        MessagesUpdated::dispatch($packet, $message->user);
+        MessagesUpdated::dispatch($message, $message->user, 'new');
 
         return new Response("Success!" , Response::HTTP_OK);
     }
@@ -134,7 +119,7 @@ class MessageController extends Controller
         $request->validate([
            'message' => 'required|string'
        ]);
-        $message = Message::findOrFail($id);
+        $message = Message::find(intval($id));
         if ($message->from_admin && Auth::user()->is_admin) {
             $message->message = $request->message;
             $message->save();
@@ -145,17 +130,7 @@ class MessageController extends Controller
             return new Response("You do not have permission" , Response::HTTP_FORBIDDEN);
         }
 
-        $packet['message_id'] = $message->id;
-        $packet['message'] = $message->message;
-        $packet['action'] = 'edit';
-        $packet['from_admin'] = $message->from_admin;
-        $packet['opened'] = $message->opened;
-        $packet['user_id'] = $message->user->id;
-        $packet['name'] = $message->user->name;
-        $packet['email'] = $message->user->email;
-        $packet['created_at'] =  date_format($message->created_at,"H:i d M Y ");
-
-        MessagesUpdated::dispatch($packet, $message->user);
+        MessagesUpdated::dispatch($message, $message->user, 'edit');
 
         return new Response("Success!" , Response::HTTP_OK);
     }
@@ -167,7 +142,8 @@ class MessageController extends Controller
      */
     public function deleteMessage($id=null)
     {
-        $message = Message::find($id);
+        $message = Message::where('id', $id)->first();
+        $messageThatWasDeleted = $message;
         if ($message->from_admin && Auth::user()->is_admin) {
             $message->delete();
         } else if(!$message->from_admin && Auth::user()){
@@ -176,17 +152,7 @@ class MessageController extends Controller
             return new Response("You do not have permission" , Response::HTTP_FORBIDDEN);
         }
 
-        $packet['message_id'] = $id;
-        $packet['message'] = $message->message;
-        $packet['action'] = 'delete';
-        $packet['from_admin'] = $message->from_admin;
-        $packet['opened'] = $message->opened;
-        $packet['user_id'] = $message->user->id;
-        $packet['name'] = $message->user->name;
-        $packet['email'] = $message->user->email;
-        $packet['created_at'] =  date_format($message->created_at,"H:i d M Y ");
-
-        MessagesUpdated::dispatch($packet, $message->user);
+        MessagesUpdated::dispatch($messageThatWasDeleted, $messageThatWasDeleted->user, 'delete');
 
         return new Response("Success!" , Response::HTTP_OK);
     }

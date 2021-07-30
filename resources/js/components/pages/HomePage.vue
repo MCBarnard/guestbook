@@ -30,8 +30,8 @@
                         <div class="chat_container__inner__bottom__right__bottom">
                             <form action="#" @submit.prevent="sendMessage(activeUserChat)">
                                 <div class="input-group">
-                                    <input :disabled="nothingOn" v-model="responseMessage" name="message-input" type="text" class="form-control" placeholder="Enter something here..">
-                                    <button :disabled="nothingOn" class="btn btn-outline-secondary" type="submit" id="button-addon2">
+                                    <input :disabled="nothingOn || showSpinner" v-model="responseMessage" name="message-input" type="text" class="form-control" placeholder="Enter something here..">
+                                    <button :disabled="nothingOn || showSpinner" class="btn btn-outline-secondary" type="submit" id="button-addon2">
                                         <img src="/images/paper-airplane.svg" alt="">
                                     </button>
                                 </div>
@@ -129,33 +129,33 @@ export default {
             });
         },
         async echoReceived(echo) {
-            if (echo.message.user_id === this.activeId) {
+            if (echo.user_id === this.activeId) {
                 // if we have an open chat, and the active chat is the echoed chat and it isnt a delete broadcast push to chat
-                if (typeof this.activeData !== "undefined" && echo.message.action === "new") {
+                if (typeof this.activeData !== "undefined" && echo.action === "new") {
                     this.activeData.messages.push({
-                        id: echo.message.message_id,
-                        admin: echo.message.from_admin,
-                        message: echo.message.message,
+                        id: echo.message_id,
+                        admin: echo.from_admin,
+                        message: echo.message,
                         new: false,
-                        timestamp: echo.message.created_at,
-                        user_id: echo.message.user_id
+                        timestamp: echo.created_at,
+                        user_id: echo.user_id
                     });
                     this.scrollDown();
-                } else if (echo.message.action === "delete") {
+                } else if (echo.action === "delete") {
                     for (let i = 0; i < this.activeData.messages.length; i++) {
-                        const messageIsCorrectMessage_ID = parseInt(this.activeData.messages[i].message_id) === parseInt(echo.message.message_id)
-                        const messageIsCorrectID = parseInt(this.activeData.messages[i].id) === parseInt(echo.message.message_id)
+                        const messageIsCorrectMessage_ID = parseInt(this.activeData.messages[i].message_id) === parseInt(echo.message_id)
+                        const messageIsCorrectID = parseInt(this.activeData.messages[i].id) === parseInt(echo.message_id)
                         if (messageIsCorrectMessage_ID || messageIsCorrectID) {
                             this.activeData.messages.splice(i, 1);
                             i = this.activeData.messages.length;
                         }
                     }
                     this.scrollDown();
-                } else if (typeof this.activeData !== "undefined" && echo.message.action === "edit") {
+                } else if (typeof this.activeData !== "undefined" && echo.action === "edit") {
                     if (typeof this.activeData !== "undefined" && this.activeData.messages.length !== 0) {
                         for (let x = 0; x < this.activeData.messages.length; x++) {
-                            if (parseInt(this.activeData.messages[x].message_id) === parseInt(echo.message.message_id)) {
-                                this.activeData.messages[x].message = echo.message.message;
+                            if (parseInt(this.activeData.messages[x].message_id) === parseInt(echo.message_id)) {
+                                this.activeData.messages[x].message = echo.message;
                             }
                         }
                     }
